@@ -72,7 +72,15 @@ runs:
             && mv __body_tmp.json __body.json
         fi
 
-        gh api --method PUT "/repos/${{ github.repository }}/code-coverage/report" \
-          --input __body.json
+        UPLOAD_OUTPUT=$(gh api --method PUT "/repos/${{ github.repository }}/code-coverage/report" \
+          --input __body.json 2>&1) || {
+          if echo "$UPLOAD_OUTPUT" | grep -qi "not authorized"; then
+            echo "::error::Coverage upload returned 403 Forbidden. Ensure the calling job has 'security-events: write' permission. See https://github.com/code-quality-org/upload-code-coverage-action#permissions"
+          else
+            echo "::error::Coverage upload failed: $UPLOAD_OUTPUT"
+          fi
+          rm -f __coverage_b64.txt __body.json
+          exit 1
+        }
 
         rm -f __coverage_b64.txt __body.json
