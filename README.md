@@ -1,5 +1,7 @@
 # Upload Code Coverage Action
 
+> **Note:** This repo (`code-quality-org/upload-code-coverage-action`) is a temporary home while the action is being developed. It will move to `github/upload-code-coverage-action` once it's ready for general use.
+
 Upload a Cobertura XML coverage report to GitHub's code coverage API.
 
 ## Usage
