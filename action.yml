@@ -1,0 +1,78 @@
+name: 'Upload Code Coverage'
+description: 'Upload a Cobertura XML coverage report to GitHub code coverage API'
+
+inputs:
+  file:
+    description: 'Path to the Cobertura XML coverage report'
+    required: true
+  language:
+    description: 'Linguist language name (e.g. "Java", "Go", "Python")'
+    required: true
+  label:
+    description: 'Label for the coverage report (e.g. "code-coverage/jacoco")'
+    required: true
+  token:
+    description: 'GitHub token with security-events:write permission'
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Upload coverage report
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        INPUT_FILE: ${{ inputs.file }}
+        INPUT_LANGUAGE: ${{ inputs.language }}
+        INPUT_LABEL: ${{ inputs.label }}
+      run: |
+        set -euo pipefail
+
+        if [ ! -f "$INPUT_FILE" ]; then
+          echo "::error::Coverage file not found: $INPUT_FILE"
+          exit 1
+        fi
+
+        # Resolve the commit SHA and ref. On pull_request events, github.sha
+        # and github.ref point to the merge commit — use the PR head instead.
+        if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "pull_request_target" ]; then
+          COMMIT_OID="${{ github.event.pull_request.head.sha }}"
+          REF="refs/heads/${{ github.event.pull_request.head.ref }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+        else
+          COMMIT_OID="${{ github.sha }}"
+          REF="${{ github.ref }}"
+          # For push events, check if this branch has an open PR.
+          PR_NUMBER=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --head "${{ github.ref_name }}" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty' 2>/dev/null || true)
+        fi
+
+        # Gzip and base64-encode the report. We write to files and use jq
+        # --rawfile to avoid hitting the OS argument length limit on large
+        # coverage reports.
+        gzip -c "$INPUT_FILE" | base64 -w 0 > __coverage_b64.txt
+
+        jq -n \
+          --arg commit_oid "$COMMIT_OID" \
+          --arg ref "$REF" \
+          --rawfile coverage_report __coverage_b64.txt \
+          --arg language_name "$INPUT_LANGUAGE" \
+          --arg label "$INPUT_LABEL" \
+          '{commit_oid: $commit_oid, ref: $ref, coverage_report: $coverage_report, language_name: $language_name, label: $label}' \
+          > __body.json
+
+        if [ -n "${PR_NUMBER:-}" ]; then
+          jq --argjson pr_number "$PR_NUMBER" \
+            '. + {pull_request_number: $pr_number}' __body.json > __body_tmp.json \
+            && mv __body_tmp.json __body.json
+        fi
+
+        gh api --method PUT "/repos/${{ github.repository }}/code-coverage/report" \
+          --input __body.json
+
+        rm -f __coverage_b64.txt __body.json
