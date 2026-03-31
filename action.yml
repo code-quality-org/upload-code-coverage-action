@@ -34,6 +34,14 @@ runs:
           exit 1
         fi
 
+        # Skip coverage upload for fork PRs — the token won't have write
+        # permissions to the base repository.
+        if [ "${{ github.event.pull_request.head.repo.full_name }}" != "" ] && \
+           [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+          echo "::notice::Skipping coverage upload for fork PR (from ${{ github.event.pull_request.head.repo.full_name }})"
+          exit 0
+        fi
+
         # Resolve the commit SHA and ref. On pull_request events, github.sha
         # and github.ref point to the merge commit — use the PR head instead.
         if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "pull_request_target" ]; then
