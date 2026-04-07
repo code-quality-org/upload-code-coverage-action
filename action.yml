@@ -50,15 +50,14 @@ runs:
           exit 0
         fi
 
-        # Resolve the commit SHA and ref. On pull_request events, github.sha
-        # and github.ref point to the merge commit — use the PR head instead.
+        COMMIT_OID="${{ github.sha }}"
+        REF="${{ github.ref }}"
+        # Resolve the commit SHA and ref.
+        # On pull_request events, github.sha and github.ref point to the
+        # synthetic merge commit and merge ref.
         if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "pull_request_target" ]; then
-          COMMIT_OID="${{ github.event.pull_request.head.sha }}"
-          REF="refs/heads/${{ github.event.pull_request.head.ref }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
         else
-          COMMIT_OID="${{ github.sha }}"
-          REF="${{ github.ref }}"
           # For push events, check if this branch has an open PR.
           PR_NUMBER=$(gh pr list \
             --repo "${{ github.repository }}" \
