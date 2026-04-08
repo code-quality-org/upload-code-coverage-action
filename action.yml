@@ -54,7 +54,6 @@ runs:
         # and github.ref point to the merge commit — use the PR head instead.
         if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "pull_request_target" ]; then
           COMMIT_OID="${{ github.event.pull_request.head.sha }}"
-          REF="refs/heads/${{ github.event.pull_request.head.ref }}"
           PR_NUMBER="${{ github.event.pull_request.number }}"
         else
           COMMIT_OID="${{ github.sha }}"
