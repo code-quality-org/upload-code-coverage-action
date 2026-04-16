@@ -99,7 +99,6 @@ jobs:
 
 The repository must have the following feature flags enabled:
 - `code_coverage_upload_api` (org-level)
-- `code_coverage_processing` (repo-level)
 
 ## Caveats
 
