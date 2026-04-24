@@ -1,13 +1,11 @@
-# Upload Code Coverage Action
-
-> **Note:** This repo (`code-quality-org/upload-code-coverage-action`) is a temporary home while the action is being developed. It will move to `github/upload-code-coverage-action` once it's ready for general use.
+# Upload Code Coverage
 
 Upload a Cobertura XML coverage report to GitHub's code coverage API.
 
 ## Usage
 
 ```yaml
-- uses: code-quality-org/upload-code-coverage-action@main
+- uses: actions/upload-code-coverage@v1
   with:
     file: cobertura.xml
     language: Java
@@ -88,7 +86,7 @@ jobs:
         with:
           name: cobertura-report
 
-      - uses: code-quality-org/upload-code-coverage-action@main
+      - uses: actions/upload-code-coverage@v1
         with:
           file: cobertura.xml
           language: Java
