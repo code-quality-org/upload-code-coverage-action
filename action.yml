@@ -29,6 +29,8 @@ runs:
       run: |
         set -euo pipefail
 
+        echo "::warning::This action has moved to actions/upload-code-coverage. Please update your workflow to use 'actions/upload-code-coverage@v1'. This copy is no longer maintained."
+
         if [ ! -f "$INPUT_FILE" ]; then
           echo "::error::Coverage file not found: $INPUT_FILE"
           exit 1
