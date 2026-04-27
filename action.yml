@@ -29,6 +29,8 @@ runs:
       run: |
         set -euo pipefail
 
+        echo "::warning::This action has moved to actions/upload-code-coverage. Please update your workflow to use 'actions/upload-code-coverage@v1'. This copy is no longer maintained."
+
         if [ ! -f "$INPUT_FILE" ]; then
           echo "::error::Coverage file not found: $INPUT_FILE"
           exit 1
@@ -99,7 +101,7 @@ runs:
         UPLOAD_OUTPUT=$(gh api --method PUT "/repos/${{ github.repository }}/code-coverage/report" \
           --input __body.json 2>&1) || {
           if echo "$UPLOAD_OUTPUT" | grep -qi "not authorized"; then
-            echo "::error::Coverage upload returned 403 Forbidden. Ensure the calling job has 'security-events: write' permission. See https://github.com/code-quality-org/upload-code-coverage-action#permissions"
+            echo "::error::Coverage upload returned 403 Forbidden. Ensure the calling job has 'security-events: write' permission. See https://github.com/actions/upload-code-coverage#permissions"
           else
             echo "::error::Coverage upload failed: $UPLOAD_OUTPUT"
           fi
